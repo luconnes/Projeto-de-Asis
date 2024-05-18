@@ -1,0 +1,43 @@
+def analisador_lexico(codigo):
+    padrao_palavras_chave = r'\b(int|float|double|char|boolean|void|def|if|else|while|for|switch|case|default|break|continue|return|struct)\b'
+    padrao_operadores = r'(\+\+|--|<=|>=|==|!=|&&|\|\||=|<|>|\+|-|\*|/|%)'
+    padrao_simbolos_especiais = r'[\(\)\[\]\{\},;.]'
+    padrao_numero_inteiro = r'\b\d+\b'
+    padrao_numero_decimal = r'\b\d+\.\d+\b'
+    padrao_identificador = r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'
+    padrao_string = r'(\".?\"|\'.?\')'
+    padrao_comentario = r'//.?$|/\.?\/'
+    
+    tokens = []
+    linhas = codigo.split('\n')
+    
+    for num_linha, linha in enumerate(linhas, start=1):
+        lexemas = re.findall(r'(\b\w+\b|==|!=|<=|>=|\+\+|--|&&|\|\||[+\-/%=(){}\[\],;.]|\".?\"|\'.*?\')', linha)
+        
+        for token in lexemas:
+            if re.match(padrao_palavras_chave, token):
+                tokens.append(('PALAVRA_CHAVE', token))
+            elif re.match(padrao_operadores, token):
+                tokens.append(('OPERADOR', token))
+            elif re.match(padrao_simbolos_especiais, token):
+                tokens.append(('SIMBOLO', token))
+            elif re.match(padrao_identificador, token):
+                tokens.append(('IDENTIFICADOR', token))
+            elif re.match(padrao_numero_decimal, token):
+                tokens.append(('NUMERO_DECIMAL', token))
+            elif re.match(padrao_numero_inteiro, token):
+                tokens.append(('NUMERO_INTEIRO', token))
+            elif re.match(padrao_string, token):
+                tokens.append(('STRING', token))
+            elif re.match(padrao_comentario, token):
+                tokens.append(('COMENTARIO', token))
+    
+    return tokens
+
+# Exemplo de uso do analisador léxico
+with open("input.txt") as file:
+    codigo_fonte = file.read()
+
+tokens = analisador_lexico(codigo_fonte)
+for token in tokens:
+    print(token)
