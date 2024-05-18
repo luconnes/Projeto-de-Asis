@@ -1,0 +1,116 @@
+class Parser:
+    def init(self, tokens):
+        self.tokens = tokens
+        self.pos = 0
+
+    def parse(self):
+        self.programa()
+
+    def programa(self):
+        while self.pos < len(self.tokens):
+            self.declaracao()
+
+    def declaracao(self):
+        if self.match('PALAVRA_CHAVE', 'int', 'float', 'double', 'char', 'boolean', 'void'):
+            self.declaracao_variavel()
+        elif self.match('PALAVRA_CHAVE', 'def'):
+            self.declaracao_funcao()
+        elif self.match('PALAVRA_CHAVE', 'struct'):
+            self.declaracao_estrutura()
+        elif self.match('COMENTARIO'):
+            self.advance()
+        else:
+            self.error("Esperado declaração")
+
+    def declaracao_variavel(self):
+        self.tipo()
+        self.consume('IDENTIFICADOR', "Esperado identificador")
+        if self.match('OPERADOR', '='):
+            self.advance()
+            self.expressao()
+        self.consume('SIMBOLO', ';', "Esperado ';'")
+
+    def tipo(self):
+        if self.match('PALAVRA_CHAVE', 'int', 'float', 'double', 'char', 'boolean', 'void'):
+            self.advance()
+        else:
+            self.error("Esperado tipo")
+
+    def declaracao_funcao(self):
+        self.consume('PALAVRA_CHAVE', 'def', "Esperado 'def'")
+        self.consume('IDENTIFICADOR', "Esperado identificador")
+        self.consume('SIMBOLO', '(', "Esperado '('")
+        self.parametros()
+        self.consume('SIMBOLO', ')', "Esperado ')'")
+        self.bloco()
+
+    def parametros(self):
+        if not self.check('SIMBOLO', ')'):
+            self.parametro()
+            while self.match('SIMBOLO', ','):
+                self.advance()
+                self.parametro()
+
+    def parametro(self):
+        self.tipo()
+        self.consume('IDENTIFICADOR', "Esperado identificador")
+
+    def bloco(self):
+        self.consume('SIMBOLO', '{', "Esperado '{'")
+        while not self.check('SIMBOLO', '}') and self.pos < len(self.tokens):
+            self.declaracao()
+        self.consume('SIMBOLO', '}', "Esperado '}'")
+
+    def expressao(self):
+        # Simplificação: assume que a expressão é apenas um identificador ou número
+        if self.match('IDENTIFICADOR'):
+            self.advance()
+        elif self.match('NUMERO_INTEIRO'):
+            self.advance()
+        elif self.match('NUMERO_DECIMAL'):
+            self.advance()
+        else:
+            self.error("Esperado expressão")
+    
+    def declaracao_estrutura(self):
+        self.consume('PALAVRA_CHAVE', 'struct', "Esperado 'struct'")
+        self.consume('IDENTIFICADOR', "Esperado identificador")
+        self.consume('SIMBOLO', '{', "Esperado '{'")
+        while not self.check('SIMBOLO', '}') and self.pos < len(self.tokens):
+            self.declaracao_variavel()
+        self.consume('SIMBOLO', '}', "Esperado '}'")
+        self.consume('SIMBOLO', ';', "Esperado ';'")
+
+    def match(self, tipo, *valores):
+        if self.pos < len(self.tokens):
+            token = self.tokens[self.pos]
+            if token[0] == tipo and (not valores or token[1] in valores):
+                return True
+        return False
+
+    def consume(self, tipo, valor=None, mensagem=None):
+        if self.match(tipo, valor):
+            self.advance()
+        else:
+            self.error(mensagem or f"Esperado {tipo} {valor}")
+
+    def check(self, tipo, valor=None):
+        return self.match(tipo, valor)
+
+    def advance(self):
+        self.pos += 1
+
+    def error(self, mensagem):
+        raise SyntaxError(f"Erro de sintaxe na posição {self.pos}: {mensagem}")
+//match: Verifica correspondência de token.
+//consume: Consome um token esperado, gerando erro se não houver correspondência.
+//check: Verifica correspondência sem consumir o token.
+//advance: Avança para o próximo token.
+//error: Gera um erro de sintaxe com uma mensagem.
+//# Exemplo de uso do analisador sintático
+parser = Parser(tokens)
+try:
+    parser.parse()
+    print("Análise sintática concluída com sucesso.")
+except SyntaxError as e:
+    print(e)
