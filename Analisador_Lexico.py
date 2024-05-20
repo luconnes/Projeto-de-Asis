@@ -14,8 +14,10 @@ def analisador_lexico(codigo):
     IDs = []
     linhas = codigo.split('\n')
     
+    padrao_lexemas = re.compile(r'(\b\w+\b|==|!=|<=|>=|\+\+|--|&&|\|\||[+\-/%=(){}\[\],;.]|"(?:\\.|[^"\\])*"|\'.*?\')')
+
     for num_linha, linha in enumerate(linhas, start=1):
-        lexemas = re.findall(r'(\b\w+\b|==|!=|<=|>=|\+\+|--|&&|\|\||[+\-/%=(){}\[\],;.]|\".?\"|\'.*?\')', linha)
+        lexemas = padrao_lexemas.findall(linha)
         
         for token in lexemas:
             if(re.match(padrao_palavras_chave, token)):
