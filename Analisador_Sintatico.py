@@ -137,9 +137,10 @@ tokens = [
     ('SIMBOLO', '}'), #21
     ('SIMBOLO', ';') #22
 ]
-# with open("input.txt") as file:
-#     tokens = file.read()
-parser = Parser(tokens)
+
+with open("input.txt") as file:
+    tokens = file.read()
+parser = Parser(Analisador_Lexico.analisador_lexico(tokens))
 
 try:
     parser.parse()
