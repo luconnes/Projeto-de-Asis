@@ -37,17 +37,20 @@ def t_error(t):
 # Construir o analisador léxico
 analise_lexica = lex()
 
-# Função para analisar o código
+# Função para analisar o código e armazenar os tokens em um vetor
 def analisador_lexico(codigo):
     analise_lexica.input(codigo)
+    tokens = []
     while True:
         token = analise_lexica.token()
         if not token:
             break
-        print(token)
+        tokens.append(token)
+    return tokens
 
 # Exemplo de uso do analisador léxico
 with open("input.txt") as file:
     codigo_fonte = file.read()
 
-analisador_lexico(codigo_fonte)
+lista_de_tokens = analisador_lexico(codigo_fonte)
+print(lista_de_tokens)
