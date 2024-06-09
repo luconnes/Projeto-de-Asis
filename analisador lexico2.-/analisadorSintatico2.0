@@ -1,1 +1,217 @@
+from ply.yacc import yacc
+from lexer import tokens
+
+# Precedência e associatividade dos operadores
+precedence = (
+    ('left', 'OR'),
+    ('left', 'AND'),
+    ('left', 'EQUAL', 'NOT_EQUAL'),
+    ('left', 'LESS', 'GREATER', 'LESS_EQUAL', 'GREATER_EQUAL'),
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE', 'MOD'),
+    ('right', 'NOT'),
+    ('right', 'UMINUS')
+)
+
+# Definindo as regras da gramática
+
+def p_program(p):
+    '''program : declaration_list'''
+    p[0] = p[1]
+
+def p_declaration_list(p):
+    '''declaration_list : declaration_list declaration
+                        | declaration'''
+    if len(p) == 3:
+        p[0] = p[1] + [p[2]]
+    else:
+        p[0] = [p[1]]
+
+def p_declaration(p):
+    '''declaration : var_declaration
+                   | fun_declaration'''
+    p[0] = p[1]
+
+def p_var_declaration(p):
+    '''var_declaration : type_specifier IDENTIFICADOR ';' '''
+    p[0] = ('var_decl', p[1], p[2])
+
+def p_type_specifier(p):
+    '''type_specifier : PALAVRA_CHAVE'''
+    p[0] = p[1]
+
+def p_fun_declaration(p):
+    '''fun_declaration : type_specifier IDENTIFICADOR '(' params ')' compound_stmt'''
+    p[0] = ('fun_decl', p[1], p[2], p[4], p[6])
+
+def p_params(p):
+    '''params : param_list
+              | PALAVRA_CHAVE'''
+    p[0] = p[1]
+
+def p_param_list(p):
+    '''param_list : param_list ',' param
+                  | param'''
+    if len(p) == 4:
+        p[0] = p[1] + [p[3]]
+    else:
+        p[0] = [p[1]]
+
+def p_param(p):
+    '''param : type_specifier IDENTIFICADOR'''
+    p[0] = (p[1], p[2])
+
+def p_compound_stmt(p):
+    '''compound_stmt : '{' local_declarations statement_list '}' '''
+    p[0] = ('compound_stmt', p[2], p[3])
+
+def p_local_declarations(p):
+    '''local_declarations : local_declarations var_declaration
+                          | empty'''
+    if len(p) == 3:
+        p[0] = p[1] + [p[2]]
+    else:
+        p[0] = []
+
+def p_statement_list(p):
+    '''statement_list : statement_list statement
+                      | empty'''
+    if len(p) == 3:
+        p[0] = p[1] + [p[2]]
+    else:
+        p[0] = []
+
+def p_statement(p):
+    '''statement : expression_stmt
+                 | compound_stmt
+                 | selection_stmt
+                 | iteration_stmt
+                 | return_stmt'''
+    p[0] = p[1]
+
+def p_expression_stmt(p):
+    '''expression_stmt : expression ';'
+                       | ';' '''
+    if len(p) == 3:
+        p[0] = p[1]
+    else:
+        p[0] = None
+
+def p_selection_stmt(p):
+    '''selection_stmt : PALAVRA_CHAVE '(' expression ')' statement
+                      | PALAVRA_CHAVE '(' expression ')' statement PALAVRA_CHAVE statement'''
+    if len(p) == 6:
+        p[0] = ('if', p[3], p[5])
+    else:
+        p[0] = ('if-else', p[3], p[5], p[7])
+
+def p_iteration_stmt(p):
+    '''iteration_stmt : PALAVRA_CHAVE '(' expression ')' statement'''
+    p[0] = ('while', p[3], p[5])
+
+def p_return_stmt(p):
+    '''return_stmt : PALAVRA_CHAVE ';'
+                   | PALAVRA_CHAVE expression ';' '''
+    if len(p) == 3:
+        p[0] = ('return',)
+    else:
+        p[0] = ('return', p[2])
+
+def p_expression(p):
+    '''expression : var OPERADOR expression
+                  | simple_expression'''
+    if len(p) == 4:
+        p[0] = ('assign', p[1], p[3])
+    else:
+        p[0] = p[1]
+
+def p_var(p):
+    '''var : IDENTIFICADOR'''
+    p[0] = p[1]
+
+def p_simple_expression(p):
+    '''simple_expression : additive_expression relop additive_expression
+                         | additive_expression'''
+    if len(p) == 4:
+        p[0] = ('binop', p[2], p[1], p[3])
+    else:
+        p[0] = p[1]
+
+def p_relop(p):
+    '''relop : '<'
+             | '>'
+             | OPERADOR'''
+    p[0] = p[1]
+
+def p_additive_expression(p):
+    '''additive_expression : additive_expression addop term
+                           | term'''
+    if len(p) == 4:
+        p[0] = ('binop', p[2], p[1], p[3])
+    else:
+        p[0] = p[1]
+
+def p_addop(p):
+    '''addop : '+'
+             | '-' '''
+    p[0] = p[1]
+
+def p_term(p):
+    '''term : term mulop factor
+            | factor'''
+    if len(p) == 4:
+        p[0] = ('binop', p[2], p[1], p[3])
+    else:
+        p[0] = p[1]
+
+def p_mulop(p):
+    '''mulop : '*'
+             | '/' '''
+    p[0] = p[1]
+
+def p_factor(p):
+    '''factor : '(' expression ')'
+              | var
+              | call
+              | NUMERO_INTEIRO
+              | NUMERO_DECIMAL'''
+    if len(p) == 4:
+        p[0] = p[2]
+    else:
+        p[0] = p[1]
+
+def p_call(p):
+    '''call : IDENTIFICADOR '(' args ')' '''
+    p[0] = ('call', p[1], p[3])
+
+def p_args(p):
+    '''args : arg_list
+            | empty'''
+    p[0] = p[1]
+
+def p_arg_list(p):
+    '''arg_list : arg_list ',' expression
+                | expression'''
+    if len(p) == 4:
+        p[0] = p[1] + [p[3]]
+    else:
+        p[0] = [p[1]]
+
+def p_empty(p):
+    'empty :'
+    p[0] = None
+
+def p_error(p):
+    if p:
+        print(f"Erro de sintaxe em '{p.value}' na linha {p.lineno}")
+    else:
+        print("Erro de sintaxe no final do arquivo")
+
+# Construir o parser
+parser = yacc()
+
+# Função para analisar o código
+def analisador_sintatico(codigo):
+    result = parser.parse(codigo, lexer=lexer)
+    return result
 
