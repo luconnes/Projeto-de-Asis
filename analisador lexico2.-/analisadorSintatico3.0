@@ -1,0 +1,155 @@
+import ply.yacc as yacc
+from lexer import tokens
+
+# Regras de precedência para resolver ambiguidades
+precedence = (
+    ('left', 'OPERADOR'),
+)
+
+# Dicionário para armazenar variáveis
+variables = {}
+
+# Definições de regras da gramática
+
+def p_program(p):
+    '''program : statement_list'''
+    p[0] = ('program', p[1])
+
+def p_statement_list(p):
+    '''statement_list : statement_list statement
+                      | statement'''
+    if len(p) == 3:
+        p[0] = p[1] + [p[2]]
+    else:
+        p[0] = [p[1]]
+
+def p_statement(p):
+    '''statement : declaration
+                 | expression_statement
+                 | compound_statement
+                 | selection_statement
+                 | iteration_statement
+                 | jump_statement'''
+    p[0] = p[1]
+
+def p_declaration(p):
+    '''declaration : PALAVRA_CHAVE IDENTIFICADOR SIMBOLO'''
+    p[0] = ('declaration', p[1], p[2])
+
+def p_expression_statement(p):
+    '''expression_statement : expression SIMBOLO '''
+    p[0] = ('expression_statement', p[1])
+
+def p_compound_statement(p):
+    '''compound_statement : SIMBOLO statement_list SIMBOLO '''
+    p[0] = ('compound_statement', p[2])
+
+def p_selection_statement(p):
+    '''selection_statement : PALAVRA_CHAVE SIMBOLO expression SIMBOLO statement PALAVRA_CHAVE statement
+                           | PALAVRA_CHAVE SIMBOLO expression SIMBOLO statement'''
+    if len(p) == 8:
+        p[0] = ('if_else_statement', p[3], p[5], p[7])
+    else:
+        p[0] = ('if_statement', p[3], p[5])
+
+def p_iteration_statement(p):
+    '''iteration_statement : PALAVRA_CHAVE SIMBOLO expression SIMBOLO statement'''
+    p[0] = ('while_statement', p[3], p[5])
+
+def p_jump_statement(p):
+    '''jump_statement : PALAVRA_CHAVE SIMBOLO'''
+    p[0] = ('jump_statement', p[1])
+
+def p_expression(p):
+    '''expression : assignment_expression'''
+    p[0] = p[1]
+
+def p_assignment_expression(p):
+    '''assignment_expression : IDENTIFICADOR OPERADOR expression
+                             | logical_or_expression'''
+    if len(p) == 4:
+        p[0] = ('assignment', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_logical_or_expression(p):
+    '''logical_or_expression : logical_and_expression
+                             | logical_or_expression OPERADOR logical_and_expression'''
+    if len(p) == 4:
+        p[0] = ('logical_or', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_logical_and_expression(p):
+    '''logical_and_expression : equality_expression
+                              | logical_and_expression OPERADOR equality_expression'''
+    if len(p) == 4:
+        p[0] = ('logical_and', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_equality_expression(p):
+    '''equality_expression : relational_expression
+                           | equality_expression OPERADOR relational_expression'''
+    if len(p) == 4:
+        p[0] = ('equality', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_relational_expression(p):
+    '''relational_expression : additive_expression
+                             | relational_expression OPERADOR additive_expression'''
+    if len(p) == 4:
+        p[0] = ('relational', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_additive_expression(p):
+    '''additive_expression : multiplicative_expression
+                           | additive_expression OPERADOR multiplicative_expression'''
+    if len(p) == 4:
+        p[0] = ('additive', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_multiplicative_expression(p):
+    '''multiplicative_expression : unary_expression
+                                 | multiplicative_expression OPERADOR unary_expression'''
+    if len(p) == 4:
+        p[0] = ('multiplicative', p[1], p[2], p[3])
+    else:
+        p[0] = p[1]
+
+def p_unary_expression(p):
+    '''unary_expression : primary_expression'''
+    p[0] = p[1]
+
+def p_primary_expression(p):
+    '''primary_expression : IDENTIFICADOR
+                          | NUMERO_INTEIRO
+                          | NUMERO_DECIMAL
+                          | STRING
+                          | CHARACTER
+                          | SIMBOLO expression SIMBOLO '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[2]
+
+def p_error(p):
+    if p:
+        print(f"Erro de sintaxe no token '{p.value}', linha {p.lineno}")
+    else:
+        print("Erro de sintaxe no final do arquivo")
+
+# Criar o parser
+parser = yacc.yacc()
+
+# Teste
+if __name__ == "__main__":
+    with open("input.txt", "r") as file:
+        source_code = file.read()
+
+    result = parser.parse(source_code)
+
+    print(result)
