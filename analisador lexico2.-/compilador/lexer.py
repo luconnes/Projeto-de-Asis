@@ -101,4 +101,27 @@ def t_error(t):
     t.lexer.skip(1)
 
 # Criar analisador léxico
-lexer = lex.lex()
+lexerReturn = lex.lex()
+
+token_list = []
+
+# Função para analisar o código-fonte de um arquivo
+def analisar_codigo_arquivo(nome_arquivo):
+    with open(nome_arquivo, 'r') as arquivo:
+        codigo = arquivo.read()
+        lexerReturn.input(codigo)
+        while True:
+            token = lexerReturn.token()
+            if not token:
+                break  # Fim do código
+            token_list.append(token)
+
+# Arquivo de entrada
+nome_arquivo = "input.txt"
+
+# Executar a análise léxica
+analisar_codigo_arquivo(nome_arquivo)
+
+# Imprimir os tokens reconhecidos
+for token in token_list:
+    print(token)
