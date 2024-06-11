@@ -1,5 +1,7 @@
 import lexer
+from lexer import *
 import parser
+from parser import *
 from parser import symbol_table
 
 if __name__ == "__main__":
@@ -14,9 +16,11 @@ if __name__ == "__main__":
     for token in lexer.lexer:
         print(token)
 
+    print("Fim da analise lexica")
     # Tentar realizar análise sintática e semântica
     try:
         result = parser.parser.parse(source_code, lexer=lexer.lexer)
+        
         print("Análise sintática e semântica completa.")
 
         # Exibir a árvore de análise

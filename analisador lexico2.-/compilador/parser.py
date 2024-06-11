@@ -53,7 +53,7 @@ def p_expression_statement(p):
     p[0] = ('expression_statement', p[1])
 
 def p_compound_statement(p):
-    '''compound_statement : SIMBOLO statement_list SIMBOLO '''
+    '''compound_statement : LBRACE statement_list RBRACE '''
     p[0] = ('compound_statement', p[2])
 
 def p_selection_statement(p):
